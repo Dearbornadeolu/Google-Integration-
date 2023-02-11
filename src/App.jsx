@@ -1,32 +1,47 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
+import { useState, useEffect } from 'react'
+import jwt_decode from "jwt-decode"
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  const [user, setUser] = useState({})
+
+  function handleCallbackResponse(response){
+    var userObject = jwt_decode(response.credential)
+    setUser(userObject)
+    document.getElementById("signInDiv").hidden = true
+  }
+
+  function handleSignOut(event){
+    setUser({})
+    document.getElementById("signInDiv").hidden = false
+  }
+
+  useEffect(()=>{
+    google.accounts.id.initialize({
+      client_id: "525309145937-0hpevnl3l6kr7l8o86cso2q0ghujmeek.apps.googleusercontent.com",
+      callback: handleCallbackResponse
+    })
+    google.accounts.id.renderButton(
+      document.getElementById("signInDiv"),
+      {theme: "outline", size: "large"}
+    )
+    google.accounts.id.prompt()
+  },[])
 
   return (
     <div className="App">
+     <div id="signInDiv"></div>
+     {
+      Object.keys(user).length != 0 && 
+      <button onClick={(e) => handleSignOut(e)}>sign out</button>
+     }
+     {user && 
       <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        <img src={user.picture}/>
+        <h3>{user.name}</h3>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+     }
     </div>
   )
 }
